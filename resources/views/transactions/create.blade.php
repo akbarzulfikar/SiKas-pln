@@ -269,13 +269,18 @@
     }
 </style>
 
+<script type="application/json" id="category-data">
+{
+    "incomeCategories": @json($incomeCategories),
+    "expenseCategories": @json($expenseCategories),
+    "oldCategoryId": "{{ old('category_id') }}"
+}
+</script>
+
 <script>
-    // Data kategori untuk JavaScript
-    window.categoryData = {
-        incomeCategories: @json($incomeCategories),
-        expenseCategories: @json($expenseCategories),
-        oldCategoryId: "{{ old('category_id') }}"
-    };
+    // Load category data from JSON script tag
+    const categoryDataElement = document.getElementById('category-data');
+    window.categoryData = JSON.parse(categoryDataElement.textContent);
 
     // Format amount input
     document.getElementById('amount').addEventListener('input', function(e) {
