@@ -236,7 +236,7 @@
     </div>
 
     <div class="company-header">
-        <div class="company-main">PT. PLN. (PERSERO)</div>
+        <div class="company-main">PT. PLN (PERSERO)</div>
         <div class="company-sub">UID Aceh</div>
         <div class="company-sub">{{ $transaction->unit->unit_name }}</div>
     </div>
