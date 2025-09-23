@@ -16,7 +16,7 @@ class UnitSeeder extends Seeder
                 'unit_type' => 'UP3',
                 'address' => 'Jl. Merdeka No. 123, Langsa',
                 'phone' => '0641-234567',
-                'email' => 'up3langsa@pln.co.id',
+                'email' => 'up3langsa@account.co.id',
             ],
             [
                 'unit_id' => 'ulp_lkt',
@@ -24,7 +24,7 @@ class UnitSeeder extends Seeder
                 'unit_type' => 'ULP',
                 'address' => 'Jl. Jend. Sudirman No. 45, Langsa',
                 'phone' => '0641-234568',
-                'email' => 'ulplangsakt@pln.co.id',
+                'email' => 'ulplangsakt@account.co.id',
             ],
             [
                 'unit_id' => 'ulp_ksp',
@@ -32,7 +32,7 @@ class UnitSeeder extends Seeder
                 'unit_type' => 'ULP',
                 'address' => 'Jl. Lintas Timur No. 78, Kuala Simpang',
                 'phone' => '0641-345678',
-                'email' => 'ulpkualasimpang@pln.co.id',
+                'email' => 'ulpkualasimpang@account.co.id',
             ],
             [
                 'unit_id' => 'ulp_plk',
@@ -40,7 +40,7 @@ class UnitSeeder extends Seeder
                 'unit_type' => 'ULP',
                 'address' => 'Jl. Banda Aceh-Medan KM 45, Peureulak',
                 'phone' => '0641-456789',
-                'email' => 'ulppeureulak@pln.co.id',
+                'email' => 'ulppeureulak@account.co.id',
             ],
             [
                 'unit_id' => 'ulp_idi',
@@ -48,7 +48,7 @@ class UnitSeeder extends Seeder
                 'unit_type' => 'ULP',
                 'address' => 'Jl. Cut Nyak Dien No. 12, Idi',
                 'phone' => '0641-567890',
-                'email' => 'ulpidi@pln.co.id',
+                'email' => 'ulpidi@account.co.id',
             ]
         ];
 
