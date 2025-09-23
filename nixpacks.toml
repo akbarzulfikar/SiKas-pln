@@ -13,18 +13,7 @@ cmds = [
 cmds = [
     "php artisan config:clear",
     "php artisan route:clear",
-    "php artisan view:clear",
-    "chmod -R 755 storage",
-    "chmod -R 755 bootstrap/cache"
-]
-
-[phases.deploy]
-cmds = [
-    "sleep 10",
-    "php artisan migrate --force || echo 'Migration failed'",
-    "php artisan db:seed --force || echo 'Seeding failed'",
-    "php artisan storage:link || echo 'Storage link failed'",
-    "php artisan config:cache"
+    "php artisan view:clear"
 ]
 
 [start]
