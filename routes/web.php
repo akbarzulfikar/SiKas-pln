@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TransactionController;
@@ -10,6 +11,32 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\PrintController;
 use App\Http\Controllers\ReportController;
+
+// ✅ TEST ROUTES - untuk debugging (hapus setelah selesai)
+Route::get('/test', function () {
+    return 'Hello World - App is working!';
+});
+
+Route::get('/test-db', function () {
+    try {
+        $pdo = DB::connection()->getPdo();
+        return 'Database connection: SUCCESS';
+    } catch (Exception $e) {
+        return 'Database connection: FAILED - ' . $e->getMessage();
+    }
+});
+
+Route::get('/test-env', function () {
+    return response()->json([
+        'DB_CONNECTION' => env('DB_CONNECTION'),
+        'DB_HOST' => env('DB_HOST'),
+        'DB_PORT' => env('DB_PORT'),
+        'DB_DATABASE' => env('DB_DATABASE'),
+        'DB_USERNAME' => env('DB_USERNAME'),
+        'DATABASE_URL' => env('DATABASE_URL') ? 'SET' : 'NOT SET',
+        'APP_KEY' => env('APP_KEY') ? 'SET' : 'NOT SET',
+    ]);
+});
 
 // Redirect root to login
 Route::get('/', function () {
@@ -109,49 +136,5 @@ Route::middleware(['auth'])->group(function () {
         // Special routes untuk Unit
         Route::post('units/{unit}/toggle-status', [UnitController::class, 'toggleStatus'])
             ->name('units.toggle-status');
-    });
-
-
-    // Tambahkan di routes/web.php - SEMENTARA untuk debugging
-
-    Route::get('/test-db', function () {
-        try {
-            // Test basic connection
-            $pdo = DB::connection()->getPdo();
-            $dbName = $pdo->query('select database()')->fetchColumn();
-
-            // Test if tables exist
-            $tables = DB::select('SHOW TABLES');
-
-            return response()->json([
-                'status' => 'success',
-                'database' => $dbName,
-                'tables_count' => count($tables),
-                'tables' => array_map(function ($table) {
-                    return array_values((array)$table)[0];
-                }, $tables),
-                'env_vars' => [
-                    'DB_CONNECTION' => env('DB_CONNECTION'),
-                    'DB_HOST' => env('DB_HOST'),
-                    'DB_PORT' => env('DB_PORT'),
-                    'DB_DATABASE' => env('DB_DATABASE'),
-                    'DB_USERNAME' => env('DB_USERNAME'),
-                    'DATABASE_URL' => env('DATABASE_URL') ? 'SET' : 'NOT SET',
-                ]
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-                'env_vars' => [
-                    'DB_CONNECTION' => env('DB_CONNECTION'),
-                    'DB_HOST' => env('DB_HOST'),
-                    'DB_PORT' => env('DB_PORT'),
-                    'DB_DATABASE' => env('DB_DATABASE'),
-                    'DB_USERNAME' => env('DB_USERNAME'),
-                    'DATABASE_URL' => env('DATABASE_URL') ? 'SET' : 'NOT SET',
-                ]
-            ], 500);
-        }
     });
 });
