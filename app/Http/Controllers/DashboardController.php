@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Transaction;
 use App\Models\Category;
 use App\Models\Unit;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
         $period = $request->get('period', 'all'); // all, today, week, month, year
 
@@ -128,6 +130,7 @@ class DashboardController extends Controller
      */
     public function getChartData(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
 
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->subDays(30);
@@ -174,6 +177,7 @@ class DashboardController extends Controller
     public function getCategoryData(Request $request)
     {
         try {
+            /** @var User $user */
             $user = Auth::user();
             $type = $request->type ?? 'expense';
             $days = $request->days ?? 30;
@@ -234,6 +238,7 @@ class DashboardController extends Controller
      */
     public function getRealtimeStats(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
 
         $baseQuery = Transaction::query();

@@ -154,6 +154,19 @@ Route::get('/test-env', function () {
     ]);
 });
 
+// CSRF refresh route untuk mengatasi 419 error
+Route::get('/refresh-csrf', function () {
+    return response()->json(['csrf_token' => csrf_token()]);
+})->middleware('web');
+
+// CSRF refresh route untuk Railway session issues
+Route::get('/refresh-csrf', function () {
+    return response()->json([
+        'csrf_token' => csrf_token(),
+        'session_id' => session()->getId()
+    ]);
+})->middleware('web');
+
 // Redirect root to login
 Route::get('/', function () {
     if (Auth::check()) {

@@ -282,9 +282,9 @@
                         <span class="me-3">
                             <i class="fas fa-calendar"></i> {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}
                         </span>
-                        <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                        <form method="POST" action="{{ route('logout') }}" id="logout-form" style="display: none;">
                             @csrf
-                            <button type="submit" class="logout-btn" onclick="return confirm('Yakin ingin logout?')">
+                            <button type="button" class="btn btn-outline-light btn-sm" onclick="confirmLogout()">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </button>
                         </form>
@@ -297,9 +297,9 @@
                         <div class="user-name">{{ Auth::user()->name }}</div>
                         <div class="user-unit">{{ Auth::user()->unit->unit_name }}</div>
                         <div class="user-role">{{ Auth::user()->role_display_name }}</div>
-                        <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                        <form method="POST" action="{{ route('logout') }}" id="logout-form" style="display: none;">
                             @csrf
-                            <button type="submit" class="logout-btn" onclick="return confirm('Yakin ingin logout?')">
+                            <button type="button" class="btn btn-outline-light btn-sm" onclick="confirmLogout()">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </button>
                         </form>
@@ -453,28 +453,40 @@
         function showComingSoon(feature) {
             alert('Fitur ' + feature + ' akan segera hadir! 🚀');
         }
-    </script>
-    
-    <script>
-        // Refresh CSRF token secara berkala untuk mencegah 419 error
+
+        function confirmLogout() {
+            if (confirm('Apakah Anda yakin ingin keluar?')) {
+                // Update CSRF token sebelum submit
+                fetch('/refresh-csrf')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.csrf_token) {
+                            document.querySelector('#logout-form input[name="_token"]').value = data.csrf_token;
+                        }
+                        document.getElementById('logout-form').submit();
+                    })
+                    .catch(error => {
+                        console.log('CSRF refresh failed, submitting anyway');
+                        document.getElementById('logout-form').submit();
+                    });
+            }
+        }
+
+        // Auto-refresh CSRF token setiap 5 menit untuk mencegah expiry
         setInterval(function() {
-            fetch('/refresh-csrf', {
-                    method: 'GET',
-                    credentials: 'same-origin'
-                })
+            fetch('/refresh-csrf')
                 .then(response => response.json())
                 .then(data => {
                     if (data.csrf_token) {
                         document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
-
-                        // Update all CSRF input fields
+                        // Update all CSRF forms
                         document.querySelectorAll('input[name="_token"]').forEach(input => {
                             input.value = data.csrf_token;
                         });
                     }
                 })
-                .catch(error => console.log('CSRF refresh failed:', error));
-        }, 300000); // Refresh setiap 5 menit
+                .catch(error => console.log('Background CSRF refresh failed'));
+        }, 300000); // 5 menit
     </script>
 
     @yield('scripts')
