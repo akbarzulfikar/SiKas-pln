@@ -17,11 +17,39 @@ Route::get('/test', function () {
     return 'Hello World - App is working!';
 });
 
+Route::get('/test-tables', function () {
+    try {
+        $tables = DB::select('SHOW TABLES');
+        $tableNames = array_map(function ($table) {
+            return array_values((array)$table)[0];
+        }, $tables);
+
+        // Cek apakah ada user admin
+        $adminUser = null;
+        if (in_array('users', $tableNames)) {
+            $adminUser = DB::select("SELECT user_id, username, name FROM users WHERE username = 'admin' LIMIT 1");
+        }
+
+        return response()->json([
+            'status' => 'SUCCESS',
+            'tables_count' => count($tables),
+            'tables' => $tableNames,
+            'admin_user' => $adminUser ? $adminUser[0] : 'NOT FOUND',
+            'migrations_needed' => !in_array('users', $tableNames),
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => 'ERROR',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+});
+
 Route::get('/test-db', function () {
     try {
         $pdo = DB::connection()->getPdo();
         $dbName = $pdo->query('select database()')->fetchColumn();
-        
+
         return response()->json([
             'status' => 'SUCCESS',
             'database' => $dbName,
