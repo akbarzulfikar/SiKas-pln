@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Sistem Informasi Kas PLN UP3 Langsa')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -109,63 +108,6 @@
             padding: 20px 0;
         }
 
-        .alert {
-            border-radius: 10px;
-            border: none;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .admin-badge {
-            background: #dc3545;
-            color: white;
-            font-size: 0.6rem;
-            padding: 2px 5px;
-            border-radius: 8px;
-            margin-left: 5px;
-            font-weight: 600;
-        }
-
-        .dropdown-menu {
-            border-radius: 8px;
-            border: none;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            margin-top: 5px;
-        }
-
-        .dropdown-item {
-            padding: 8px 16px;
-            transition: all 0.2s ease;
-            color: #333;
-        }
-
-        .dropdown-item:hover {
-            background-color: #f8f9fa;
-            transform: translateX(5px);
-            color: var(--pln-blue);
-        }
-
-        .dropdown-item.active {
-            background-color: var(--pln-blue) !important;
-            color: white !important;
-        }
-
-        .dropdown-item i {
-            margin-right: 8px;
-            width: 16px;
-        }
-
-        .nav-item.dropdown .nav-link.dropdown-toggle::after {
-            margin-left: 8px;
-        }
-
-        footer {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-top: 1px solid #dee2e6;
-            padding: 20px 0;
-            margin-top: 40px;
-        }
-
-        /* Mobile Responsive */
         @media (max-width: 991px) {
             .navbar-user {
                 margin-top: 15px;
@@ -216,7 +158,7 @@
                         </a>
                     </li>
 
-                    <!-- Reports - FIXED -->
+                    <!-- Reports -->
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"
                             href="{{ route('reports.index') }}">
@@ -230,30 +172,31 @@
                         <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}"
                             href="{{ route('categories.index') }}">
                             <i class="fas fa-tags"></i> Kategori
-                            <span class="admin-badge">Admin</span>
                         </a>
                     </li>
 
-                    <!-- Admin Dropdown Menu -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {{ request()->routeIs('users.*') || request()->routeIs('units.*') ? 'active' : '' }}" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-cog"></i> Admin
-                            <span class="admin-badge">Only</span>
+                    <!-- Users (Admin Only) -->
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"
+                            href="{{ route('users.index') }}">
+                            <i class="fas fa-users"></i> Pengguna
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-                            <li>
-                                <a class="dropdown-item {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
-                                    <i class="fas fa-users"></i> Manajemen User
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {{ request()->routeIs('units.*') ? 'active' : '' }}" href="{{ route('units.index') }}">
-                                    <i class="fas fa-building"></i> Manajemen Unit
-                                </a>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
+                    </li>
+
+                    <!-- Units (Admin Only) -->
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('units.*') ? 'active' : '' }}"
+                            href="{{ route('units.index') }}">
+                            <i class="fas fa-building"></i> Unit Kerja
+                        </a>
+                    </li>
+
+                    <!-- Admin Tools -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="adminToolsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cogs"></i> Tools Admin
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="adminToolsDropdown">
                             <li>
                                 <a class="dropdown-item" href="#" onclick="alert('Fitur ini akan segera hadir!')">
                                     <i class="fas fa-cog"></i> Pengaturan Sistem
@@ -282,9 +225,9 @@
                         <span class="me-3">
                             <i class="fas fa-calendar"></i> {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}
                         </span>
-                        <form method="POST" action="{{ route('logout') }}" id="logout-form" style="display: none;">
+                        <form action="{{ route('logout') }}" method="POST" style="display: inline;">
                             @csrf
-                            <button type="button" class="btn btn-outline-light btn-sm" onclick="confirmLogout()">
+                            <button type="submit" class="logout-btn" onclick="return confirmLogout(event)">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </button>
                         </form>
@@ -297,9 +240,9 @@
                         <div class="user-name">{{ Auth::user()->name }}</div>
                         <div class="user-unit">{{ Auth::user()->unit->unit_name }}</div>
                         <div class="user-role">{{ Auth::user()->role_display_name }}</div>
-                        <form method="POST" action="{{ route('logout') }}" id="logout-form" style="display: none;">
+                        <form action="{{ route('logout') }}" method="POST" style="display: inline;">
                             @csrf
-                            <button type="button" class="btn btn-outline-light btn-sm" onclick="confirmLogout()">
+                            <button type="submit" class="logout-btn" onclick="return confirmLogout(event)">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </button>
                         </form>
@@ -347,149 +290,59 @@
         </div>
         @endif
 
-        @if($errors->any())
-        <div class="container-fluid">
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle"></i>
-                <ul class="mb-0">
-                    @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        </div>
-        @endif
-
         @yield('content')
     </div>
 
-    <!-- Footer -->
-    <footer class="text-center">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6 text-md-start text-center">
-                    <p class="mb-0 text-muted">
-                        <i class="fas fa-bolt text-primary"></i>
-                        <strong>Sistem Informasi Kas PLN UP3 Langsa</strong>
-                    </p>
-                    <small class="text-muted">
-                        Version 1.0 &copy; {{ date('Y') }} - Built with Laravel {{ app()->version() }}
-                    </small>
-                </div>
-                <div class="col-md-6 text-md-end text-center">
-                    @auth
-                    <p class="mb-0 text-muted">
-                        <i class="fas fa-building"></i> {{ Auth::user()->unit->unit_name }}
-                        <br>
-                        <small>Login sebagai: <strong>{{ Auth::user()->name }}</strong> ({{ Auth::user()->role_display_name }})</small>
-                    </p>
-                    @endauth
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Scripts -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Logout Fix Script -->
     <script>
-        // Auto hide alerts after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                const alerts = document.querySelectorAll('.alert');
-                alerts.forEach(function(alert) {
-                    if (alert.querySelector('.btn-close')) {
-                        const bsAlert = new bootstrap.Alert(alert);
-                        bsAlert.close();
-                    }
-                });
-            }, 5000);
-        });
-
-        // Add loading state to forms
-        document.querySelectorAll('form').forEach(function(form) {
-            form.addEventListener('submit', function() {
-                const submitBtn = form.querySelector('button[type="submit"]');
-                if (submitBtn && !submitBtn.disabled) {
-                    const originalText = submitBtn.innerHTML;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-                    submitBtn.disabled = true;
-
-                    // Re-enable after 10 seconds to prevent permanent disable
-                    setTimeout(function() {
-                        submitBtn.innerHTML = originalText;
-                        submitBtn.disabled = false;
-                    }, 10000);
-                }
-            });
-        });
-
-        // Confirm delete actions
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('btn-delete') ||
-                e.target.closest('.btn-delete') ||
-                (e.target.getAttribute('onclick') && e.target.getAttribute('onclick').includes('confirmDelete'))) {
-                if (!confirm('Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan!')) {
-                    e.preventDefault();
-                    return false;
-                }
-            }
-        });
-
-        // Highlight active dropdown items
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentPath = window.location.pathname;
-            const dropdownItems = document.querySelectorAll('.dropdown-item');
-
-            dropdownItems.forEach(function(item) {
-                const href = item.getAttribute('href');
-                if (href && currentPath.startsWith(href) && href !== '#') {
-                    item.classList.add('active');
-                }
-            });
-        });
-
-        // Show notification for coming soon features
-        function showComingSoon(feature) {
-            alert('Fitur ' + feature + ' akan segera hadir! 🚀');
-        }
-
-        function confirmLogout() {
-            if (confirm('Apakah Anda yakin ingin keluar?')) {
-                // Update CSRF token sebelum submit
-                fetch('/refresh-csrf')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.csrf_token) {
-                            document.querySelector('#logout-form input[name="_token"]').value = data.csrf_token;
-                        }
-                        document.getElementById('logout-form').submit();
-                    })
-                    .catch(error => {
-                        console.log('CSRF refresh failed, submitting anyway');
-                        document.getElementById('logout-form').submit();
-                    });
-            }
-        }
-
-        // Auto-refresh CSRF token setiap 5 menit untuk mencegah expiry
-        setInterval(function() {
+    function confirmLogout(event) {
+        if (confirm('Yakin ingin logout?')) {
+            // Refresh CSRF token sebelum submit
+            event.preventDefault();
+            
             fetch('/refresh-csrf')
                 .then(response => response.json())
                 .then(data => {
                     if (data.csrf_token) {
-                        document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
-                        // Update all CSRF forms
-                        document.querySelectorAll('input[name="_token"]').forEach(input => {
-                            input.value = data.csrf_token;
-                        });
+                        // Update CSRF token di form
+                        const csrfInput = event.target.form.querySelector('input[name="_token"]');
+                        if (csrfInput) {
+                            csrfInput.value = data.csrf_token;
+                        }
                     }
+                    // Submit form setelah token diupdate
+                    event.target.form.submit();
                 })
-                .catch(error => console.log('Background CSRF refresh failed'));
-        }, 300000); // 5 menit
+                .catch(error => {
+                    // Jika refresh gagal, submit tetap dilakukan
+                    console.log('CSRF refresh failed, proceeding with logout');
+                    event.target.form.submit();
+                });
+            return false;
+        }
+        return false;
+    }
+
+    // Auto-refresh CSRF token setiap 10 menit untuk mencegah expiry
+    setInterval(function() {
+        fetch('/refresh-csrf')
+            .then(response => response.json())
+            .then(data => {
+                if (data.csrf_token) {
+                    document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
+                    // Update all CSRF forms
+                    document.querySelectorAll('input[name="_token"]').forEach(input => {
+                        input.value = data.csrf_token;
+                    });
+                }
+            })
+            .catch(error => console.log('Background CSRF refresh failed'));
+    }, 600000); // 10 menit
     </script>
 
     @yield('scripts')
 </body>
-
 </html>
