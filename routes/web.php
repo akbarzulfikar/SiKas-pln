@@ -110,4 +110,48 @@ Route::middleware(['auth'])->group(function () {
         Route::post('units/{unit}/toggle-status', [UnitController::class, 'toggleStatus'])
             ->name('units.toggle-status');
     });
+
+
+    // Tambahkan di routes/web.php - SEMENTARA untuk debugging
+
+    Route::get('/test-db', function () {
+        try {
+            // Test basic connection
+            $pdo = DB::connection()->getPdo();
+            $dbName = $pdo->query('select database()')->fetchColumn();
+
+            // Test if tables exist
+            $tables = DB::select('SHOW TABLES');
+
+            return response()->json([
+                'status' => 'success',
+                'database' => $dbName,
+                'tables_count' => count($tables),
+                'tables' => array_map(function ($table) {
+                    return array_values((array)$table)[0];
+                }, $tables),
+                'env_vars' => [
+                    'DB_CONNECTION' => env('DB_CONNECTION'),
+                    'DB_HOST' => env('DB_HOST'),
+                    'DB_PORT' => env('DB_PORT'),
+                    'DB_DATABASE' => env('DB_DATABASE'),
+                    'DB_USERNAME' => env('DB_USERNAME'),
+                    'DATABASE_URL' => env('DATABASE_URL') ? 'SET' : 'NOT SET',
+                ]
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'env_vars' => [
+                    'DB_CONNECTION' => env('DB_CONNECTION'),
+                    'DB_HOST' => env('DB_HOST'),
+                    'DB_PORT' => env('DB_PORT'),
+                    'DB_DATABASE' => env('DB_DATABASE'),
+                    'DB_USERNAME' => env('DB_USERNAME'),
+                    'DATABASE_URL' => env('DATABASE_URL') ? 'SET' : 'NOT SET',
+                ]
+            ], 500);
+        }
+    });
 });
