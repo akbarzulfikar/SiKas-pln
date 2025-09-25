@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 class DashboardController extends Controller
 {
@@ -35,7 +37,7 @@ class DashboardController extends Controller
         if ($user->role === 'user') {
             $allTimeQuery->where('unit_id', $user->unit_id);
         }
-        
+
         $totalIncome = (clone $allTimeQuery)->where('transaction_type', 'income')->sum('amount');
         $totalExpense = (clone $allTimeQuery)->where('transaction_type', 'expense')->sum('amount');
         $balance = $totalIncome - $totalExpense;
@@ -51,7 +53,7 @@ class DashboardController extends Controller
         // Today's transactions
         $todaysTransactions = Transaction::query()
             ->with(['category', 'creator', 'unit'])
-            ->when($user->role === 'user', function($query) use ($user) {
+            ->when($user->role === 'user', function ($query) use ($user) {
                 return $query->where('unit_id', $user->unit_id);
             })
             ->whereDate('transaction_date', Carbon::today())
@@ -64,7 +66,7 @@ class DashboardController extends Controller
             ->with('category')
             ->where('transaction_type', 'expense')
             ->where('transaction_date', '>=', Carbon::now()->subDays(30));
-            
+
         if ($user->role === 'user') {
             $expenseCategoriesQuery->where('unit_id', $user->unit_id);
         }
@@ -95,7 +97,7 @@ class DashboardController extends Controller
             $unitStats = Unit::with(['transactions'])->get()->map(function ($unit) {
                 $totalIncome = $unit->transactions->where('transaction_type', 'income')->sum('amount');
                 $totalExpense = $unit->transactions->where('transaction_type', 'expense')->sum('amount');
-                
+
                 return [
                     'unit_id' => $unit->unit_id,
                     'unit_name' => $unit->unit_name,
@@ -163,45 +165,68 @@ class DashboardController extends Controller
         return response()->json($data);
     }
 
+
+    // Tambahkan method ini di DashboardController.php
+
     /**
-     * Get category breakdown for charts
+     * Get category breakdown for charts - FIXED VERSION
      */
     public function getCategoryData(Request $request)
     {
-        $user = Auth::user();
-        $type = $request->type ?? 'expense';
-        $days = $request->days ?? 30;
-        $unitId = $request->unit_id; 
+        try {
+            $user = Auth::user();
+            $type = $request->type ?? 'expense';
+            $days = $request->days ?? 30;
+            $unitId = $request->unit_id;
 
-        $startDate = Carbon::now()->subDays($days);
+            // Validate type
+            if (!in_array($type, ['income', 'expense'])) {
+                return response()->json(['error' => 'Invalid transaction type'], 400);
+            }
 
-        $query = Transaction::query()
-            ->with('category')
-            ->where('transaction_type', $type)
-            ->where('transaction_date', '>=', $startDate);
+            $query = Transaction::query()
+                ->with('category')
+                ->where('transaction_type', $type)
+                ->where('transaction_date', '>=', Carbon::now()->subDays($days));
 
-        // Filter by unit
-        if ($user->role === 'user') {
-            $query->where('unit_id', $user->unit_id);
-        } elseif ($user->role === 'admin' && $unitId) {
-            $query->where('unit_id', $unitId);
+            // Filter by unit
+            if ($user->role === 'user') {
+                $query->where('unit_id', $user->unit_id);
+            } elseif ($user->role === 'admin' && $unitId) {
+                $query->where('unit_id', $unitId);
+            }
+
+            $data = $query
+                ->select('category_id', DB::raw('SUM(amount) as total'))
+                ->groupBy('category_id')
+                ->having('total', '>', 0)
+                ->orderBy('total', 'desc')
+                ->limit(8)
+                ->get()
+                ->map(function ($item, $index) {
+                    $colors = [
+                        '#FF6384',
+                        '#36A2EB',
+                        '#FFCE56',
+                        '#4BC0C0',
+                        '#9966FF',
+                        '#FF9F40',
+                        '#FF6384',
+                        '#C9CBCF'
+                    ];
+
+                    return [
+                        'category' => $item->category->category_name,
+                        'total' => (float) $item->total,
+                        'color' => $colors[$index % count($colors)]
+                    ];
+                });
+
+            return response()->json($data);
+        } catch (Exception $e) {
+            Log::error('Dashboard category data error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to load data'], 500);
         }
-
-        $data = $query->select('category_id', DB::raw('SUM(amount) as total'))
-            ->groupBy('category_id')
-            ->having('total', '>', 0)
-            ->orderBy('total', 'desc')
-            ->limit(10)
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'category' => $item->category->category_name,
-                    'total' => (float) $item->total,
-                    'color' => $this->generateCategoryColor($item->category_id)
-                ];
-            });
-
-        return response()->json($data);
     }
 
     /**
@@ -289,11 +314,20 @@ class DashboardController extends Controller
     private function generateCategoryColor($categoryId)
     {
         $colors = [
-            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-            '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
+            '#FF6384',
+            '#36A2EB',
+            '#FFCE56',
+            '#4BC0C0',
+            '#9966FF',
+            '#FF9F40',
+            '#FF6384',
+            '#C9CBCF',
+            '#4BC0C0',
+            '#FF6384'
         ];
-        
+
         $index = crc32($categoryId) % count($colors);
         return $colors[abs($index)];
     }
 }
+
