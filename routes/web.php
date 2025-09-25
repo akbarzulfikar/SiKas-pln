@@ -20,9 +20,21 @@ Route::get('/test', function () {
 Route::get('/test-db', function () {
     try {
         $pdo = DB::connection()->getPdo();
-        return 'Database connection: SUCCESS';
+        $dbName = $pdo->query('select database()')->fetchColumn();
+        
+        return response()->json([
+            'status' => 'SUCCESS',
+            'database' => $dbName,
+            'connection' => config('database.default'),
+            'driver' => config('database.connections.' . config('database.default') . '.driver'),
+        ]);
     } catch (Exception $e) {
-        return 'Database connection: FAILED - ' . $e->getMessage();
+        return response()->json([
+            'status' => 'FAILED',
+            'error' => $e->getMessage(),
+            'connection' => config('database.default'),
+            'config' => config('database.connections.' . config('database.default')),
+        ], 500);
     }
 });
 
@@ -35,6 +47,7 @@ Route::get('/test-env', function () {
         'DB_USERNAME' => env('DB_USERNAME'),
         'DATABASE_URL' => env('DATABASE_URL') ? 'SET' : 'NOT SET',
         'APP_KEY' => env('APP_KEY') ? 'SET' : 'NOT SET',
+        'default_connection' => config('database.default'),
     ]);
 });
 
