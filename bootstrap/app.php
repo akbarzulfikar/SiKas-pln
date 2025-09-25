@@ -11,9 +11,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Global middleware
+        // ✅ PERBAIKAN: Pastikan web middleware group memiliki CSRF protection
         $middleware->web(append: [
             \App\Http\Middleware\SecurityHeaders::class,
+        ]);
+        
+        // ✅ PERBAIKAN: Tambahkan CSRF protection secara eksplisit
+        $middleware->validateCsrfTokens(except: [
+            // Jika ada route yang perlu dikecualikan dari CSRF
         ]);
         
         // Daftarkan middleware alias

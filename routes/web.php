@@ -2,8 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TransactionController;
@@ -13,160 +11,6 @@ use App\Http\Controllers\UnitController;
 use App\Http\Controllers\PrintController;
 use App\Http\Controllers\ReportController;
 
-// ✅ TEST ROUTES - untuk debugging (hapus setelah selesai)
-Route::get('/test', function () {
-    return 'Hello World - App is working!';
-});
-
-Route::get('/test-tables', function () {
-    try {
-        $tables = DB::select('SHOW TABLES');
-        $tableNames = array_map(function($table) {
-            return array_values((array)$table)[0];
-        }, $tables);
-        
-        // Cek apakah ada user admin
-        $adminUser = null;
-        if (in_array('users', $tableNames)) {
-            $adminUser = DB::select("SELECT user_id, username, name FROM users WHERE username = 'admin' LIMIT 1");
-        }
-        
-        return response()->json([
-            'status' => 'SUCCESS',
-            'tables_count' => count($tables),
-            'tables' => $tableNames,
-            'admin_user' => $adminUser ? $adminUser[0] : 'NOT FOUND',
-            'migrations_needed' => !in_array('users', $tableNames),
-        ]);
-    } catch (Exception $e) {
-        return response()->json([
-            'status' => 'ERROR',
-            'error' => $e->getMessage()
-        ], 500);
-    }
-});
-
-Route::get('/test-migrate', function () {
-    try {
-        // Cek apakah tabel migrations ada
-        $tablesResult = DB::select('SHOW TABLES');
-        $tables = array_map(function($table) {
-            return array_values((array)$table)[0];
-        }, $tablesResult);
-        
-        $hasMigrationsTable = in_array('migrations', $tables);
-        
-        if ($hasMigrationsTable) {
-            $migrations = DB::select('SELECT * FROM migrations ORDER BY batch, migration');
-        } else {
-            $migrations = 'migrations table not found';
-        }
-        
-        return response()->json([
-            'tables' => $tables,
-            'has_migrations_table' => $hasMigrationsTable,
-            'migrations' => $migrations,
-            'migration_files_should_exist' => [
-                '0001_01_01_000001_create_cache_table',
-                '0001_01_01_000002_create_jobs_table', 
-                '2025_08_20_135147_create_units_table',
-                '2025_08_20_135222_create_users_table',
-                '2025_08_20_135236_create_transactions_table',
-                '2025_08_20_135242_create_sessions_table',
-            ]
-        ]);
-    } catch (Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage()
-        ], 500);
-    }
-});
-
-Route::get('/run-migration', function () {
-    try {
-        // Run migrations manually
-        Artisan::call('migrate', ['--force' => true]);
-        $migrateOutput = Artisan::output();
-        
-        // Run seeder manually  
-        Artisan::call('db:seed', ['--force' => true]);
-        $seedOutput = Artisan::output();
-        
-        // Check results
-        $tables = DB::select('SHOW TABLES');
-        $tableNames = array_map(function($table) {
-            return array_values((array)$table)[0];
-        }, $tables);
-        
-        // Check admin user
-        $adminUser = null;
-        if (in_array('users', $tableNames)) {
-            $adminUser = DB::select("SELECT user_id, username, name FROM users WHERE username = 'admin' LIMIT 1");
-        }
-        
-        return response()->json([
-            'migration_output' => $migrateOutput,
-            'seed_output' => $seedOutput,
-            'tables_created' => $tableNames,
-            'admin_user' => $adminUser ? $adminUser[0] : 'NOT FOUND',
-            'success' => true
-        ]);
-        
-    } catch (Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'success' => false
-        ], 500);
-    }
-});
-
-Route::get('/test-db', function () {
-    try {
-        $pdo = DB::connection()->getPdo();
-        $dbName = $pdo->query('select database()')->fetchColumn();
-        
-        return response()->json([
-            'status' => 'SUCCESS',
-            'database' => $dbName,
-            'connection' => config('database.default'),
-            'driver' => config('database.connections.' . config('database.default') . '.driver'),
-        ]);
-    } catch (Exception $e) {
-        return response()->json([
-            'status' => 'FAILED',
-            'error' => $e->getMessage(),
-            'connection' => config('database.default'),
-            'config' => config('database.connections.' . config('database.default')),
-        ], 500);
-    }
-});
-
-Route::get('/test-env', function () {
-    return response()->json([
-        'DB_CONNECTION' => env('DB_CONNECTION'),
-        'DB_HOST' => env('DB_HOST'),
-        'DB_PORT' => env('DB_PORT'),
-        'DB_DATABASE' => env('DB_DATABASE'),
-        'DB_USERNAME' => env('DB_USERNAME'),
-        'DATABASE_URL' => env('DATABASE_URL') ? 'SET' : 'NOT SET',
-        'APP_KEY' => env('APP_KEY') ? 'SET' : 'NOT SET',
-        'default_connection' => config('database.default'),
-    ]);
-});
-
-// CSRF refresh route untuk mengatasi 419 error
-Route::get('/refresh-csrf', function () {
-    return response()->json(['csrf_token' => csrf_token()]);
-})->middleware('web');
-
-// CSRF refresh route untuk Railway session issues
-Route::get('/refresh-csrf', function () {
-    return response()->json([
-        'csrf_token' => csrf_token(),
-        'session_id' => session()->getId()
-    ]);
-})->middleware('web');
-
 // Redirect root to login
 Route::get('/', function () {
     if (Auth::check()) {
@@ -175,10 +19,12 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
-// Authentication routes
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+// ✅ PERBAIKAN: Authentication routes dengan middleware web eksplisit
+Route::middleware(['web'])->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+});
 
 // Protected routes - require authentication
 Route::middleware(['auth'])->group(function () {
