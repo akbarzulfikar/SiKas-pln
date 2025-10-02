@@ -292,7 +292,7 @@
             <tr>
                 <td class="signature-cell">
                     <div class="signature-title">Mengetahui:</div>
-                    <div class="signature-name">INDRADI PRATAMA</div>
+                    <div class="signature-name">GUSTHAMA DICKY ZACHRANDY</div>
                 </td>
                 <td class="signature-cell">
                     <div class="signature-title">Menyetujui:</div>
